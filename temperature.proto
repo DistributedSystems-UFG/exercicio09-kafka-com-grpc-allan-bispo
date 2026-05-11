@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package temperature;
+
+// --- Mensagens de requisição ---
+
+message Empty {}
+
+message SensorRequest {
+  string sensor_id = 1;
+}
+
+message HistoryRequest {
+  string sensor_id = 1;
+  int32 limit = 2;  // 0 = usa padrão (10)
+}
+
+// --- Mensagens de resposta ---
+
+message TemperatureStats {
+  string sensor_id = 1;
+  double avg_2h   = 2;   // média das últimas 2 horas
+  double min_2h   = 3;   // mínima das últimas 2 horas
+  double max_2h   = 4;   // máxima das últimas 2 horas
+  int32  count_2h = 5;   // número de amostras na janela
+  int64  timestamp = 6;  // epoch seconds
+}
+
+message SensorList {
+  repeated string sensor_ids = 1;
+}
+
+// --- Serviço gRPC ---
+
+service TemperatureService {
+  // Unary: retorna a estatística mais recente de um sensor
+  rpc GetLatestStats(SensorRequest) returns (TemperatureStats);
+
+  // Server-side streaming: retorna histórico de estatísticas
+  rpc GetHistory(HistoryRequest) returns (stream TemperatureStats);
+
+  // Unary: lista todos os sensores conhecidos
+  rpc ListSensors(Empty) returns (SensorList);
+}
